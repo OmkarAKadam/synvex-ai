@@ -1,0 +1,57 @@
+# =========================================================================
+# Synvex AI Monorepo .gitignore
+# =========================================================================
+
+# --- System / OS files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# --- VS Code ---
+.vscode/
+*.code-workspace
+
+# --- Maven / Spring Boot Backend ---
+**/target/
+**/*.class
+**/*.jar
+**/*.war
+**/*.ear
+**/*.zip
+**/*.tar.gz
+**/logs/
+**/*.log
+
+# --- Keep Maven Wrapper and configuration ---
+!**/mvnw
+!**/mvnw.cmd
+!**/pom.xml
+!**/.mvn/wrapper/maven-wrapper.properties
+!**/.mvn/wrapper/maven-wrapper.jar
+
+# --- Node / React Vite Frontend ---
+**/node_modules/
+**/dist/
+**/build/
+**/.vite/
+.eslintcache
+.stylelintcache
+
+# --- Keep Frontend configuration ---
+!**/package.json
+
+# --- Environment Secrets & Config ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.local

@@ -3,6 +3,7 @@ package com.synvex.backend.user.service;
 import com.synvex.backend.user.dto.UserDTO;
 import com.synvex.backend.user.entity.User;
 import com.synvex.backend.user.repository.UserRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +14,11 @@ import java.util.NoSuchElementException;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -27,7 +30,7 @@ public class UserService {
         User user = User.builder()
                 .name(userDTO.getName())
                 .email(userDTO.getEmail())
-                .password(userDTO.getPassword())
+                .password(passwordEncoder.encode(userDTO.getPassword()))
                 .occupation(userDTO.getOccupation())
                 .availableHours(userDTO.getAvailableHours())
                 .workStyle(userDTO.getWorkStyle())
@@ -59,7 +62,7 @@ public class UserService {
 
         user.setName(userDTO.getName());
         user.setEmail(userDTO.getEmail());
-        user.setPassword(userDTO.getPassword());
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         user.setOccupation(userDTO.getOccupation());
         user.setAvailableHours(userDTO.getAvailableHours());
         user.setWorkStyle(userDTO.getWorkStyle());

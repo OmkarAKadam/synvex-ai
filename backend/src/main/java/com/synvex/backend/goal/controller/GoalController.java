@@ -6,6 +6,7 @@ import com.synvex.backend.goal.service.GoalService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,33 +28,37 @@ public class GoalController {
         this.goalService = goalService;
     }
 
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<Goal> createGoal(@PathVariable Long userId, @Valid @RequestBody GoalDTO goalDTO) {
-        Goal createdGoal = goalService.createGoal(userId, goalDTO);
+    @PostMapping
+    public ResponseEntity<Goal> createGoal(Authentication authentication, @Valid @RequestBody GoalDTO goalDTO) {
+        Goal createdGoal = goalService.createGoal(authentication.getName(), goalDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdGoal);
     }
 
     @GetMapping
-    public ResponseEntity<List<Goal>> getAllGoals() {
-        List<Goal> goals = goalService.getAllGoals();
+    public ResponseEntity<List<Goal>> getAllGoals(Authentication authentication) {
+        List<Goal> goals = goalService.getAllGoals(authentication.getName());
         return ResponseEntity.ok(goals);
     }
 
     @GetMapping("/{goalId}")
-    public ResponseEntity<Goal> getGoalById(@PathVariable Long goalId) {
-        Goal goal = goalService.getGoalById(goalId);
+    public ResponseEntity<Goal> getGoalById(Authentication authentication, @PathVariable Long goalId) {
+        Goal goal = goalService.getGoalById(authentication.getName(), goalId);
         return ResponseEntity.ok(goal);
     }
 
     @PutMapping("/{goalId}")
-    public ResponseEntity<Goal> updateGoal(@PathVariable Long goalId, @Valid @RequestBody GoalDTO goalDTO) {
-        Goal updatedGoal = goalService.updateGoal(goalId, goalDTO);
+    public ResponseEntity<Goal> updateGoal(
+            Authentication authentication,
+            @PathVariable Long goalId,
+            @Valid @RequestBody GoalDTO goalDTO
+    ) {
+        Goal updatedGoal = goalService.updateGoal(authentication.getName(), goalId, goalDTO);
         return ResponseEntity.ok(updatedGoal);
     }
 
     @DeleteMapping("/{goalId}")
-    public ResponseEntity<Void> deleteGoal(@PathVariable Long goalId) {
-        goalService.deleteGoal(goalId);
+    public ResponseEntity<Void> deleteGoal(Authentication authentication, @PathVariable Long goalId) {
+        goalService.deleteGoal(authentication.getName(), goalId);
         return ResponseEntity.noContent().build();
     }
 }

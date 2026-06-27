@@ -7,6 +7,7 @@ import com.synvex.backend.goal.entity.RiskLevel;
 import com.synvex.backend.goal.repository.GoalRepository;
 import com.synvex.backend.user.entity.User;
 import com.synvex.backend.user.repository.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,9 +25,8 @@ public class GoalService {
     }
 
     @Transactional
-    public Goal createGoal(Long userId, GoalDTO goalDTO) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+    public Goal createGoal(String email, GoalDTO goalDTO) {
+        User user = getAuthenticatedUser(email);
 
         Goal goal = Goal.builder()
                 .title(goalDTO.getTitle())
@@ -43,20 +43,24 @@ public class GoalService {
     }
 
     @Transactional(readOnly = true)
-    public List<Goal> getAllGoals() {
-        return goalRepository.findAll();
+    public List<Goal> getAllGoals(String email) {
+        User user = getAuthenticatedUser(email);
+        return goalRepository.findByUserId(user.getId());
     }
 
     @Transactional(readOnly = true)
-    public Goal getGoalById(Long goalId) {
-        return goalRepository.findById(goalId)
-                .orElseThrow(() -> new RuntimeException("Goal not found with id: " + goalId));
+    public Goal getGoalById(String email, Long goalId) {
+        User user = getAuthenticatedUser(email);
+        Goal goal = getGoalOrThrow(goalId);
+        verifyOwnership(goal, user);
+        return goal;
     }
 
     @Transactional
-    public Goal updateGoal(Long goalId, GoalDTO goalDTO) {
-        Goal goal = goalRepository.findById(goalId)
-                .orElseThrow(() -> new RuntimeException("Goal not found with id: " + goalId));
+    public Goal updateGoal(String email, Long goalId, GoalDTO goalDTO) {
+        User user = getAuthenticatedUser(email);
+        Goal goal = getGoalOrThrow(goalId);
+        verifyOwnership(goal, user);
 
         goal.setTitle(goalDTO.getTitle());
         goal.setDescription(goalDTO.getDescription());
@@ -67,10 +71,27 @@ public class GoalService {
     }
 
     @Transactional
-    public void deleteGoal(Long goalId) {
-        Goal goal = goalRepository.findById(goalId)
-                .orElseThrow(() -> new RuntimeException("Goal not found with id: " + goalId));
+    public void deleteGoal(String email, Long goalId) {
+        User user = getAuthenticatedUser(email);
+        Goal goal = getGoalOrThrow(goalId);
+        verifyOwnership(goal, user);
 
         goalRepository.delete(goal);
+    }
+
+    private User getAuthenticatedUser(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
+    private Goal getGoalOrThrow(Long goalId) {
+        return goalRepository.findById(goalId)
+                .orElseThrow(() -> new RuntimeException("Goal not found with id: " + goalId));
+    }
+
+    private void verifyOwnership(Goal goal, User user) {
+        if (!goal.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("You do not have permission to access this goal.");
+        }
     }
 }

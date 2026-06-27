@@ -6,6 +6,7 @@ import com.synvex.backend.task.service.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,33 +28,37 @@ public class TaskController {
         this.taskService = taskService;
     }
 
-    @PostMapping("/goal/{goalId}")
-    public ResponseEntity<Task> createTask(@PathVariable Long goalId, @Valid @RequestBody TaskDTO taskDTO) {
-        Task createdTask = taskService.createTask(goalId, taskDTO);
+    @PostMapping
+    public ResponseEntity<Task> createTask(Authentication authentication, @Valid @RequestBody TaskDTO taskDTO) {
+        Task createdTask = taskService.createTask(authentication.getName(), taskDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
     }
 
     @GetMapping
-    public ResponseEntity<List<Task>> getAllTasks() {
-        List<Task> tasks = taskService.getAllTasks();
+    public ResponseEntity<List<Task>> getAllTasks(Authentication authentication) {
+        List<Task> tasks = taskService.getAllTasks(authentication.getName());
         return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/{taskId}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long taskId) {
-        Task task = taskService.getTaskById(taskId);
+    public ResponseEntity<Task> getTaskById(Authentication authentication, @PathVariable Long taskId) {
+        Task task = taskService.getTaskById(authentication.getName(), taskId);
         return ResponseEntity.ok(task);
     }
 
     @PutMapping("/{taskId}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long taskId, @Valid @RequestBody TaskDTO taskDTO) {
-        Task updatedTask = taskService.updateTask(taskId, taskDTO);
+    public ResponseEntity<Task> updateTask(
+            Authentication authentication,
+            @PathVariable Long taskId,
+            @Valid @RequestBody TaskDTO taskDTO
+    ) {
+        Task updatedTask = taskService.updateTask(authentication.getName(), taskId, taskDTO);
         return ResponseEntity.ok(updatedTask);
     }
 
     @DeleteMapping("/{taskId}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long taskId) {
-        taskService.deleteTask(taskId);
+    public ResponseEntity<Void> deleteTask(Authentication authentication, @PathVariable Long taskId) {
+        taskService.deleteTask(authentication.getName(), taskId);
         return ResponseEntity.noContent().build();
     }
 }

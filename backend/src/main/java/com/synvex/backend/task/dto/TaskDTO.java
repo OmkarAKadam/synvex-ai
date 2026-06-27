@@ -20,6 +20,8 @@ import java.time.LocalDate;
 @Builder
 public class TaskDTO {
 
+    private Long goalId;
+
     @NotBlank(message = "Title cannot be blank")
     @Size(max = 200, message = "Title cannot exceed 200 characters")
     private String title;

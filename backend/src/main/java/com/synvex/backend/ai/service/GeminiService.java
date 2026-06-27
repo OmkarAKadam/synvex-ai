@@ -6,6 +6,7 @@ import com.synvex.backend.ai.client.GeminiClient;
 import com.synvex.backend.ai.dto.GoalBreakdownResponseDTO;
 import com.synvex.backend.daily.dto.DailyPlannerResponseDTO;
 import com.synvex.backend.risk.dto.RiskAnalysisResponseDTO;
+import com.synvex.backend.replanning.dto.ReplanningResponseDTO;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -55,6 +56,19 @@ public class GeminiService {
 
         return RiskAnalysisResponseDTO.builder()
                 .analysis(extractedText)
+                .build();
+    }
+
+    public ReplanningResponseDTO generateReplanning(String prompt) {
+        if (prompt == null || prompt.trim().isEmpty()) {
+            throw new IllegalArgumentException("Prompt must not be null or blank");
+        }
+
+        String rawResponse = geminiClient.generateContent(prompt);
+        String extractedText = parseGeminiResponse(rawResponse);
+
+        return ReplanningResponseDTO.builder()
+                .updatedPlan(extractedText)
                 .build();
     }
 

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { login as loginService } from '../services/authService'
 import AuthContext from './authContext'
 
 const TOKEN_STORAGE_KEY = 'synvex_token'
@@ -23,16 +24,16 @@ function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_STORAGE_KEY))
   const [user, setUser] = useState(readStoredUser)
 
-  const login = (jwt, authenticatedUser = null) => {
-    localStorage.setItem(TOKEN_STORAGE_KEY, jwt)
-    setToken(jwt)
-    setUser(authenticatedUser)
+  const login = async (credentials) => {
+    const response = await loginService(credentials)
+    const jwt = response.token
 
-    if (authenticatedUser) {
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authenticatedUser))
-    } else {
-      localStorage.removeItem(USER_STORAGE_KEY)
-    }
+    localStorage.setItem(TOKEN_STORAGE_KEY, jwt)
+    localStorage.removeItem(USER_STORAGE_KEY)
+    setToken(jwt)
+    setUser(null)
+
+    return response
   }
 
   const logout = () => {

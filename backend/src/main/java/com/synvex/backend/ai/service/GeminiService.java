@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.synvex.backend.ai.client.GeminiClient;
 import com.synvex.backend.ai.dto.GoalBreakdownResponseDTO;
 import com.synvex.backend.daily.dto.DailyPlannerResponseDTO;
+import com.synvex.backend.risk.dto.RiskAnalysisResponseDTO;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -41,6 +42,19 @@ public class GeminiService {
 
         return DailyPlannerResponseDTO.builder()
                 .plan(extractedText)
+                .build();
+    }
+
+    public RiskAnalysisResponseDTO generateRiskAnalysis(String prompt) {
+        if (prompt == null || prompt.trim().isEmpty()) {
+            throw new IllegalArgumentException("Prompt must not be null or blank");
+        }
+
+        String rawResponse = geminiClient.generateContent(prompt);
+        String extractedText = parseGeminiResponse(rawResponse);
+
+        return RiskAnalysisResponseDTO.builder()
+                .analysis(extractedText)
                 .build();
     }
 

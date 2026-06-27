@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.synvex.backend.ai.client.GeminiClient;
 import com.synvex.backend.ai.dto.GoalBreakdownResponseDTO;
+import com.synvex.backend.analytics.dto.AnalyticsResponseDTO;
 import com.synvex.backend.daily.dto.DailyPlannerResponseDTO;
 import com.synvex.backend.risk.dto.RiskAnalysisResponseDTO;
 import com.synvex.backend.replanning.dto.ReplanningResponseDTO;
@@ -69,6 +70,19 @@ public class GeminiService {
 
         return ReplanningResponseDTO.builder()
                 .updatedPlan(extractedText)
+                .build();
+    }
+
+    public AnalyticsResponseDTO generateAnalytics(String prompt) {
+        if (prompt == null || prompt.trim().isEmpty()) {
+            throw new IllegalArgumentException("Prompt must not be null or blank");
+        }
+
+        String rawResponse = geminiClient.generateContent(prompt);
+        String extractedText = parseGeminiResponse(rawResponse);
+
+        return AnalyticsResponseDTO.builder()
+                .insights(extractedText)
                 .build();
     }
 

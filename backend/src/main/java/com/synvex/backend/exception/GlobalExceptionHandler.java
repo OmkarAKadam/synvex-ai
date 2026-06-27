@@ -7,6 +7,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -64,5 +65,31 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    @ExceptionHandler(HttpServerErrorException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpServerErrorException(HttpServerErrorException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+
+        if (ex.getStatusCode().equals(HttpStatus.SERVICE_UNAVAILABLE)) {
+            body.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+            body.put("error", HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase());
+            body.put("message", "Gemini AI is temporarily unavailable. Please try again later.");
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
+        } else {
+            int statusCode = ex.getStatusCode().value();
+            body.put("status", statusCode);
+
+            HttpStatus resolvedStatus = HttpStatus.resolve(statusCode);
+            if (resolvedStatus != null) {
+                body.put("error", resolvedStatus.getReasonPhrase());
+            } else {
+                body.put("error", "Server Error");
+            }
+
+            body.put("message", ex.getMessage());
+            return ResponseEntity.status(statusCode).body(body);
+        }
     }
 }

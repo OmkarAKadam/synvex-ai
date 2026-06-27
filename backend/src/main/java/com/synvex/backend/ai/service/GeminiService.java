@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.synvex.backend.ai.client.GeminiClient;
 import com.synvex.backend.ai.dto.GoalBreakdownResponseDTO;
+import com.synvex.backend.daily.dto.DailyPlannerResponseDTO;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,7 +24,27 @@ public class GeminiService {
         }
 
         String rawResponse = geminiClient.generateContent(prompt);
+        String extractedText = parseGeminiResponse(rawResponse);
 
+        return GoalBreakdownResponseDTO.builder()
+                .plan(extractedText)
+                .build();
+    }
+
+    public DailyPlannerResponseDTO generateDailyPlan(String prompt) {
+        if (prompt == null || prompt.trim().isEmpty()) {
+            throw new IllegalArgumentException("Prompt must not be null or blank");
+        }
+
+        String rawResponse = geminiClient.generateContent(prompt);
+        String extractedText = parseGeminiResponse(rawResponse);
+
+        return DailyPlannerResponseDTO.builder()
+                .plan(extractedText)
+                .build();
+    }
+
+    private String parseGeminiResponse(String rawResponse) {
         try {
             JsonNode rootNode = objectMapper.readTree(rawResponse);
             JsonNode textNode = rootNode.path("candidates")
@@ -37,9 +58,7 @@ public class GeminiService {
                 throw new RuntimeException("Invalid response received from Gemini API.");
             }
 
-            return GoalBreakdownResponseDTO.builder()
-                    .plan(textNode.asText())
-                    .build();
+            return textNode.asText();
         } catch (Exception e) {
             throw new RuntimeException("Invalid response received from Gemini API.");
         }

@@ -1,5 +1,6 @@
 package com.synvex.backend.user.service;
 
+import com.synvex.backend.auth.dto.ChangePasswordRequestDTO;
 import com.synvex.backend.user.dto.UserDTO;
 import com.synvex.backend.user.dto.UserProfileResponseDTO;
 import com.synvex.backend.user.dto.UserProfileUpdateDTO;
@@ -112,6 +113,26 @@ public class UserService {
     public void deleteCurrentUser(String email) {
         User user = getUserByEmail(email);
         userRepository.delete(user);
+    }
+
+    @Transactional
+    public void changePassword(String email, ChangePasswordRequestDTO changePasswordRequestDTO) {
+        User user = getUserByEmail(email);
+
+        if (!passwordEncoder.matches(changePasswordRequestDTO.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect.");
+        }
+
+        if (!changePasswordRequestDTO.getNewPassword().equals(changePasswordRequestDTO.getConfirmPassword())) {
+            throw new RuntimeException("New password and confirmation password do not match.");
+        }
+
+        if (passwordEncoder.matches(changePasswordRequestDTO.getNewPassword(), user.getPassword())) {
+            throw new RuntimeException("New password must be different from the current password.");
+        }
+
+        user.setPassword(passwordEncoder.encode(changePasswordRequestDTO.getNewPassword()));
+        userRepository.save(user);
     }
 
     private User getUserByEmail(String email) {

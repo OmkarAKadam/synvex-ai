@@ -3,6 +3,8 @@ package com.synvex.backend.auth.controller;
 import com.synvex.backend.auth.dto.AuthRequestDTO;
 import com.synvex.backend.auth.dto.AuthResponseDTO;
 import com.synvex.backend.auth.dto.ChangePasswordRequestDTO;
+import com.synvex.backend.auth.dto.ForgotPasswordRequestDTO;
+import com.synvex.backend.auth.dto.ResetPasswordRequestDTO;
 import com.synvex.backend.auth.service.JwtService;
 import com.synvex.backend.user.service.UserService;
 import jakarta.validation.Valid;
@@ -15,6 +17,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -54,6 +58,18 @@ public class AuthController {
             @Valid @RequestBody ChangePasswordRequestDTO changePasswordRequestDTO
     ) {
         userService.changePassword(authentication.getName(), changePasswordRequestDTO);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO request) {
+        userService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok(Map.of("message", "If an account exists, a password reset link has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO request) {
+        userService.resetPassword(request.getToken(), request.getNewPassword(), request.getConfirmPassword());
         return ResponseEntity.noContent().build();
     }
 }

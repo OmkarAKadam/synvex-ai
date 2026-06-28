@@ -1,6 +1,7 @@
 package com.synvex.backend.user.service;
 
 import com.synvex.backend.auth.dto.ChangePasswordRequestDTO;
+import com.synvex.backend.auth.dto.ForgotPasswordRequestDTO;
 import com.synvex.backend.user.dto.UserDTO;
 import com.synvex.backend.user.dto.UserProfileResponseDTO;
 import com.synvex.backend.user.dto.UserProfileUpdateDTO;
@@ -10,8 +11,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -149,5 +152,38 @@ public class UserService {
                 .availableHours(user.getAvailableHours())
                 .workStyle(user.getWorkStyle())
                 .build();
+    }
+
+    @Transactional
+    public void forgotPassword(String email) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            String token = UUID.randomUUID().toString();
+            user.setResetToken(token);
+            user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(30));
+            userRepository.save(user);
+        });
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword, String confirmPassword) {
+        User user = userRepository.findByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid token."));
+
+        if (user.getResetTokenExpiry() == null || user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Token expired.");
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            throw new RuntimeException("Passwords do not match.");
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new RuntimeException("New password must be different from the current password.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        userRepository.save(user);
     }
 }

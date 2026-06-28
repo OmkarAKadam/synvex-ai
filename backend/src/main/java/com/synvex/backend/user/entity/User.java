@@ -63,4 +63,10 @@ public class User {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "reset_token", nullable = true)
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry", nullable = true)
+    private LocalDateTime resetTokenExpiry;
 }

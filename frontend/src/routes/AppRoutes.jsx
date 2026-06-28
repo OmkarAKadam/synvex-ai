@@ -1,8 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import ProtectedRoute from '../components/common/ProtectedRoute'
+import ProtectedRoute from './ProtectedRoute'
 import AiPage from '../pages/ai/AiPage'
 import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
+import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage'
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
 import GoalsPage from '../pages/goals/GoalsPage'
 import NotFoundPage from '../pages/NotFoundPage'
@@ -15,6 +17,8 @@ function AppRoutes() {
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route
         path="/dashboard"
         element={

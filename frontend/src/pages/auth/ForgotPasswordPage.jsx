@@ -1,41 +1,41 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { loginSchema } from '../../utils/validators'
-import useAuth from '../../hooks/useAuth'
-import { useNavigate } from 'react-router-dom'
+import { forgotPasswordSchema } from '../../utils/validators'
+import { forgotPassword } from '../../services/authService'
 import { useState } from 'react'
 
-function LoginPage() {
-  const { login, loading: authLoading } = useAuth()
-  const navigate = useNavigate()
+function ForgotPasswordPage() {
   const [authError, setAuthError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(forgotPasswordSchema),
     shouldFocusError: true,
   })
 
   const onSubmit = async (data) => {
     setAuthError('')
+    setSuccessMessage('')
     try {
-      await login(data)
-      navigate('/dashboard')
+      await forgotPassword(data.email)
+      setSuccessMessage('If the email exists, a password reset link has been sent.')
     } catch (err) {
-      const message = err?.response?.data?.message || err?.friendlyMessage || 'Login failed'
+      const message = err?.response?.data?.message || err?.friendlyMessage || 'Failed to send reset link'
       setAuthError(message)
     }
   }
 
-  const isLoading = authLoading || isSubmitting
+  const isLoading = isSubmitting
 
   return (
     <div>
-      <h1>Login</h1>
+      <h1>Forgot Password</h1>
       {authError && <div role="alert" style={{ color: 'red' }}>{authError}</div>}
+      {successMessage && <div role="status" style={{ color: 'green' }}>{successMessage}</div>}
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <div>
           <label htmlFor="email">Email</label>
@@ -48,23 +48,12 @@ function LoginPage() {
           />
           {errors.email && <span role="alert" style={{ color: 'red' }}>{errors.email.message}</span>}
         </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            {...register('password')}
-            type="password"
-            autoComplete="current-password"
-            disabled={isLoading}
-          />
-          {errors.password && <span role="alert" style={{ color: 'red' }}>{errors.password.message}</span>}
-        </div>
         <button type="submit" disabled={isLoading}>
-          {isLoading ? 'Logging in...' : 'Login'}
+          {isLoading ? 'Sending...' : 'Send Reset Link'}
         </button>
       </form>
     </div>
   )
 }
 
-export default LoginPage
+export default ForgotPasswordPage

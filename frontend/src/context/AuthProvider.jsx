@@ -1,57 +1,60 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { login as loginService } from '../services/authService'
+import { getCurrentUser } from '../services/userService'
 import AuthContext from './authContext'
 
 const TOKEN_STORAGE_KEY = 'synvex_token'
-const USER_STORAGE_KEY = 'synvex_user'
-
-function readStoredUser() {
-  const storedUser = localStorage.getItem(USER_STORAGE_KEY)
-
-  if (!storedUser) {
-    return null
-  }
-
-  try {
-    return JSON.parse(storedUser)
-  } catch {
-    localStorage.removeItem(USER_STORAGE_KEY)
-    return null
-  }
-}
 
 function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_STORAGE_KEY))
-  const [user, setUser] = useState(readStoredUser)
+  const [currentUser, setCurrentUser] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  const refreshUser = async () => {
+    setLoading(true)
+    try {
+      const userData = await getCurrentUser()
+      setCurrentUser(userData)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const login = async (credentials) => {
     const response = await loginService(credentials)
     const jwt = response.token
 
     localStorage.setItem(TOKEN_STORAGE_KEY, jwt)
-    localStorage.removeItem(USER_STORAGE_KEY)
     setToken(jwt)
-    setUser(null)
+
+    await refreshUser()
 
     return response
   }
 
   const logout = () => {
     localStorage.removeItem(TOKEN_STORAGE_KEY)
-    localStorage.removeItem(USER_STORAGE_KEY)
     setToken(null)
-    setUser(null)
+    setCurrentUser(null)
   }
+
+  useEffect(() => {
+    if (token && !currentUser) {
+      refreshUser()
+    }
+  }, [token])
 
   const value = useMemo(
     () => ({
       token,
-      user,
+      currentUser,
+      loading,
       isAuthenticated: Boolean(token),
       login,
       logout,
+      refreshUser,
     }),
-    [token, user],
+    [token, currentUser, loading],
   )
 
   return <AuthContext value={value}>{children}</AuthContext>

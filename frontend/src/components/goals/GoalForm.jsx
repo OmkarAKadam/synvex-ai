@@ -12,7 +12,7 @@ const schema = z.object({
 })
 
 export default function GoalForm({ defaultValues, onSubmit, onCancel, submitting }) {
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     defaultValues,
     mode: 'onChange',

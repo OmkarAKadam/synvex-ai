@@ -28,8 +28,6 @@ export default function TaskForm({
     register,
     handleSubmit,
     formState: { errors },
-    watch,
-    setValue,
   } = useForm({
     resolver: zodResolver(taskSchema),
     defaultValues,

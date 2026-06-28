@@ -1,6 +1,7 @@
 package com.synvex.backend.task.controller;
 
 import com.synvex.backend.task.dto.TaskDTO;
+import com.synvex.backend.task.dto.TaskStatusUpdateDTO;
 import com.synvex.backend.task.entity.Task;
 import com.synvex.backend.task.service.TaskService;
 import jakarta.validation.Valid;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -53,6 +55,20 @@ public class TaskController {
             @Valid @RequestBody TaskDTO taskDTO
     ) {
         Task updatedTask = taskService.updateTask(authentication.getName(), taskId, taskDTO);
+        return ResponseEntity.ok(updatedTask);
+    }
+
+    @PatchMapping("/{taskId}/status")
+    public ResponseEntity<Task> updateTaskStatus(
+            Authentication authentication,
+            @PathVariable Long taskId,
+            @Valid @RequestBody TaskStatusUpdateDTO taskStatusUpdateDTO
+    ) {
+        Task updatedTask = taskService.updateTaskStatus(
+                authentication.getName(),
+                taskId,
+                taskStatusUpdateDTO.getStatus()
+        );
         return ResponseEntity.ok(updatedTask);
     }
 

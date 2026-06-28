@@ -1,6 +1,7 @@
 package com.synvex.backend.goal.controller;
 
 import com.synvex.backend.goal.dto.GoalDTO;
+import com.synvex.backend.goal.dto.GoalProgressUpdateDTO;
 import com.synvex.backend.goal.entity.Goal;
 import com.synvex.backend.goal.service.GoalService;
 import jakarta.validation.Valid;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -53,6 +55,16 @@ public class GoalController {
             @Valid @RequestBody GoalDTO goalDTO
     ) {
         Goal updatedGoal = goalService.updateGoal(authentication.getName(), goalId, goalDTO);
+        return ResponseEntity.ok(updatedGoal);
+    }
+
+    @PatchMapping("/{goalId}/progress")
+    public ResponseEntity<Goal> updateGoalProgress(
+            Authentication authentication,
+            @PathVariable Long goalId,
+            @Valid @RequestBody GoalProgressUpdateDTO dto
+    ) {
+        Goal updatedGoal = goalService.updateGoalProgress(authentication.getName(), goalId, dto);
         return ResponseEntity.ok(updatedGoal);
     }
 

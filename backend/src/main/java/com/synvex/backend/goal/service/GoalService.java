@@ -1,6 +1,7 @@
 package com.synvex.backend.goal.service;
 
 import com.synvex.backend.goal.dto.GoalDTO;
+import com.synvex.backend.goal.dto.GoalProgressUpdateDTO;
 import com.synvex.backend.goal.entity.Goal;
 import com.synvex.backend.goal.entity.GoalStatus;
 import com.synvex.backend.goal.entity.RiskLevel;
@@ -66,6 +67,17 @@ public class GoalService {
         goal.setDescription(goalDTO.getDescription());
         goal.setDeadline(goalDTO.getDeadline());
         goal.setPriority(goalDTO.getPriority());
+
+        return goalRepository.save(goal);
+    }
+
+    @Transactional
+    public Goal updateGoalProgress(String email, Long goalId, GoalProgressUpdateDTO dto) {
+        User user = getAuthenticatedUser(email);
+        Goal goal = getGoalOrThrow(goalId);
+        verifyOwnership(goal, user);
+
+        goal.setProgressPercentage(dto.getProgressPercentage());
 
         return goalRepository.save(goal);
     }

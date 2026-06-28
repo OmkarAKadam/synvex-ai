@@ -12,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -77,6 +78,22 @@ public class TaskService {
         task.setEstimatedHours(taskDTO.getEstimatedHours());
         task.setPriority(taskDTO.getPriority());
         task.setDueDate(taskDTO.getDueDate());
+
+        return taskRepository.save(task);
+    }
+
+    @Transactional
+    public Task updateTaskStatus(String email, Long taskId, TaskStatus status) {
+        User user = getAuthenticatedUser(email);
+        Task task = getTaskOrThrow(taskId);
+        verifyTaskOwnership(task, user);
+
+        task.setStatus(status);
+        if (status == TaskStatus.COMPLETED) {
+            task.setCompletedAt(LocalDateTime.now());
+        } else {
+            task.setCompletedAt(null);
+        }
 
         return taskRepository.save(task);
     }

@@ -25,6 +25,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status
+
     const messages = {
       400: 'The request could not be processed.',
       401: 'Authentication is required.',
@@ -32,13 +33,21 @@ apiClient.interceptors.response.use(
       500: 'The server encountered an error.',
     }
 
+    if (status === 401) {
+      localStorage.removeItem('synvex_token');
+      localStorage.removeItem('synvex_user');
+
+      delete apiClient.defaults.headers.common.Authorization;
+    }
+
     if (messages[status]) {
       error.status = status
-      error.friendlyMessage = error.response?.data?.message || messages[status]
+      error.friendlyMessage =
+        error.response?.data?.message || messages[status]
     }
 
     return Promise.reject(error)
-  },
+  }
 )
 
 export default apiClient

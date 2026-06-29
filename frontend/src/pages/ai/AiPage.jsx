@@ -12,6 +12,7 @@ import RiskAnalysisForm from '../../components/ai/RiskAnalysisForm'
 import ReplanningForm from '../../components/ai/ReplanningForm'
 import AnalyticsForm from '../../components/ai/AnalyticsForm'
 import AiResult from '../../components/ai/AiResult'
+import DashboardLayout from '../../components/layout/DashboardLayout'
 
 export default function AiPage() {
   const [activeTool, setActiveTool] = useState('goal-breakdown')
@@ -37,7 +38,6 @@ export default function AiPage() {
     setResult(null)
     try {
       const response = await currentTool.submit(values)
-      // response contains a single field: plan, analysis, updatedPlan, or insights
       const text = response.plan || response.analysis || response.updatedPlan || response.insights
       setResult(text)
     } catch (err) {
@@ -53,37 +53,55 @@ export default function AiPage() {
   }
 
   return (
-    <div>
-      <h1>AI Tools</h1>
+    <DashboardLayout title="AI Tools">
+      {/* Sub navigation tabs */}
+      <div className="border-b border-border flex items-center gap-6 overflow-x-auto scrollbar-none mb-6">
+        {tools.map(t => {
+          const isActive = activeTool === t.id
+          return (
+            <button
+              key={t.id}
+              onClick={() => { setActiveTool(t.id); setResult(null); setError(null); }}
+              className={`pb-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap cursor-pointer
+                ${isActive
+                  ? 'border-primary text-text'
+                  : 'border-transparent text-text-muted hover:text-text'
+                }`}
+            >
+              {t.label}
+            </button>
+          )
+        })}
+      </div>
 
-      <nav style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        {tools.map(t => (
-          <button
-            key={t.id}
-            onClick={() => { setActiveTool(t.id); setResult(null); setError(null); }}
-            style={{
-              padding: '0.5rem 1rem',
-              background: activeTool === t.id ? '#0066cc' : '#eee',
-              color: activeTool === t.id ? '#fff' : '#000',
-              border: 'none',
-              borderRadius: '3px',
-              cursor: 'pointer',
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
+      {error && (
+        <div className="mb-6 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs font-medium max-w-xl">
+          Error: {error}
+        </div>
+      )}
 
-      {error && <div style={{ color: 'red', marginBottom: '1rem' }}>Error: {error}</div>}
+      {/* Form Card */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="border border-border bg-surface rounded-xl p-6 shadow-sm">
+          <h2 className="text-sm font-semibold text-text mb-4 uppercase tracking-wider text-text-secondary">
+            Configure {currentTool.label}
+          </h2>
+          <ActiveForm
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            submitting={loading}
+          />
+        </div>
 
-      <ActiveForm
-        onSubmit={handleSubmit}
-        onCancel={handleCancel}
-        submitting={loading}
-      />
-
-      {result && <AiResult title={currentTool.resultTitle} content={result} />}
-    </div>
+        {/* AI Result Card */}
+        {result ? (
+          <AiResult title={currentTool.resultTitle} content={result} />
+        ) : (
+          <div className="border border-border border-dashed bg-surface/30 rounded-xl p-8 text-center text-text-muted text-sm py-16">
+            Configure the parameters and generate to view AI insights.
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
   )
 }

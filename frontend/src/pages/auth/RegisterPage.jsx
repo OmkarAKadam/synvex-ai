@@ -1,13 +1,18 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { registerSchema } from '../../utils/validators'
-import { register } from '../../services/authService'
-import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { registerSchema } from '../../utils/validators';
+import { register } from '../../services/authService';
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import AuthLayout from '../../components/auth/AuthLayout';
+import AuthInput from '../../components/auth/AuthInput';
+import PasswordInput from '../../components/auth/PasswordInput';
+import AuthButton from '../../components/auth/AuthButton';
+import { motion, AnimatePresence } from 'framer-motion';
 
-function RegisterPage() {
-  const navigate = useNavigate()
-  const [authError, setAuthError] = useState('')
+export default function RegisterPage() {
+  const navigate = useNavigate();
+  const [authError, setAuthError] = useState('');
 
   const {
     register: registerField,
@@ -15,76 +20,89 @@ function RegisterPage() {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(registerSchema),
-  })
+  });
 
   const onSubmit = async (data) => {
-    setAuthError('')
+    setAuthError('');
     try {
-      await register(data)
-      navigate('/login')
+      await register(data);
+      navigate('/login');
     } catch (err) {
-      const message = err?.response?.data?.message || err?.friendlyMessage || 'Registration failed'
-      setAuthError(message)
+      const message = err?.response?.data?.message || err?.friendlyMessage || 'Registration failed';
+      setAuthError(message);
     }
-  }
+  };
 
-  const isLoading = isSubmitting
+  const isLoading = isSubmitting;
 
   return (
-    <div>
-      <h1>Register</h1>
-      {authError && <div role="alert" style={{ color: 'red' }}>{authError}</div>}
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div>
-          <label htmlFor="name">Full Name</label>
-          <input
-            id="name"
-            {...registerField('name')}
-            type="text"
-            autoComplete="name"
-            disabled={isLoading}
-          />
-          {errors.name && <span role="alert" style={{ color: 'red' }}>{errors.name.message}</span>}
+    <AuthLayout isLogin={false} onSwitch={() => navigate('/login')}>
+      <div className="w-full">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-text mb-1">Create account</h1>
+          <p className="text-sm text-text-muted">Join Synvex AI today</p>
         </div>
-        <div>
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            {...registerField('email')}
-            type="email"
-            autoComplete="email"
-            disabled={isLoading}
-          />
-          {errors.email && <span role="alert" style={{ color: 'red' }}>{errors.email.message}</span>}
-        </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            {...registerField('password')}
-            type="password"
-            autoComplete="new-password"
-            disabled={isLoading}
-          />
-          {errors.password && <span role="alert" style={{ color: 'red' }}>{errors.password.message}</span>}
-        </div>
-        <div>
-          <label htmlFor="confirmPassword">Confirm Password</label>
-          <input
-            id="confirmPassword"
-            {...registerField('confirmPassword')}
-            type="password"
-            autoComplete="new-password"
-            disabled={isLoading}
-          />
-          {errors.confirmPassword && <span role="alert" style={{ color: 'red' }}>{errors.confirmPassword.message}</span>}
-        </div>
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? 'Registering...' : 'Register'}
-        </button>
-      </form>
-    </div>
-  )
-}
 
-export default RegisterPage
+        <AnimatePresence mode="wait">
+          {authError && (
+            <motion.div
+              key="error"
+              className="mb-4 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs font-medium"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {authError}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className="space-y-4">
+            <AuthInput
+              {...registerField('name')}
+              label="Full Name"
+              type="text"
+              autoComplete="name"
+              error={errors.name?.message}
+              disabled={isLoading}
+              placeholder="Enter your name"
+            />
+            <AuthInput
+              {...registerField('email')}
+              label="Email"
+              type="email"
+              autoComplete="email"
+              error={errors.email?.message}
+              disabled={isLoading}
+              placeholder="Enter your email"
+            />
+            <PasswordInput
+              {...registerField('password')}
+              label="Password"
+              error={errors.password?.message}
+              disabled={isLoading}
+              placeholder="Create a password"
+            />
+            <PasswordInput
+              {...registerField('confirmPassword')}
+              label="Confirm Password"
+              type="password"
+              error={errors.confirmPassword?.message}
+              disabled={isLoading}
+              placeholder="Confirm your password"
+              showStrength={false}
+            />
+            <AuthButton
+              type="submit"
+              loading={isLoading}
+              className="mt-2"
+            >
+              Create Account
+            </AuthButton>
+          </div>
+        </form>
+      </div>
+    </AuthLayout>
+  );
+}

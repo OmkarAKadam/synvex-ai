@@ -9,6 +9,8 @@ import {
 import { getAllGoals } from '../../services/goalService'
 import TaskForm from '../../components/tasks/TaskForm'
 import TaskCard from '../../components/tasks/TaskCard'
+import DashboardLayout from '../../components/layout/DashboardLayout'
+import { Plus } from 'lucide-react'
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState([])
@@ -102,22 +104,52 @@ export default function TasksPage() {
   }
 
   // Render
-  if (loading) return <div>Loading…</div>
-  if (error) return <div style={{ color: 'red' }}>Error: {error}</div>
+  if (loading) {
+    return (
+      <DashboardLayout title="Tasks">
+        <div className="text-text-secondary font-medium animate-pulse">Loading tasks…</div>
+      </DashboardLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout title="Tasks">
+        <div className="border border-error/20 bg-error/5 text-error px-4 py-3 rounded-lg text-sm font-medium">
+          Error: {error}
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
-    <div>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1>Tasks</h1>
-        <button onClick={openCreate} style={{ padding: '0.5rem 1rem' }}>
-          + New Task
+    <DashboardLayout title="Tasks">
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div>
+          <p className="text-sm text-text-muted mt-0.5">Manage and track your operational items.</p>
+        </div>
+        <button
+          onClick={openCreate}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary-hover transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+        >
+          <Plus size={16} />
+          New Task
         </button>
-      </header>
+      </div>
 
       {tasks.length === 0 ? (
-        <p>No tasks yet. Click “New Task” to add one.</p>
+        <div className="text-center py-12 border border-border border-dashed bg-surface/50 rounded-xl">
+          <p className="text-sm text-text-secondary mb-4">No tasks yet. Add one to get started.</p>
+          <button
+            onClick={openCreate}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-border bg-surface hover:bg-surface-elevated text-text font-medium text-sm transition-colors shadow-xs"
+          >
+            <Plus size={14} />
+            Create Task
+          </button>
+        </div>
       ) : (
-        <div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {tasks.map(t => (
             <TaskCard
               key={t.id}
@@ -132,41 +164,19 @@ export default function TasksPage() {
 
       {/* Modal wrapper */}
       {showForm && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: '#fff',
-              padding: '1.5rem',
-              borderRadius: '6px',
-              width: '100%',
-              maxWidth: '560px',
-              maxHeight: '90vh',
-              overflow: 'auto',
-            }}
-          >
-            <h2>{editingTask ? 'Edit Task' : 'Create Task'}</h2>
+        <div className="fixed inset-0 bg-overlay/40 flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-surface border border-border p-6 rounded-xl shadow-md w-full max-w-lg max-h-[90vh] overflow-y-auto relative animate-scale-in">
+            <h2 className="text-lg font-bold text-text mb-4 border-b border-border pb-3">
+              {editingTask ? 'Edit Task' : 'Create Task'}
+            </h2>
             <TaskForm
               defaultValues={editingTask
                 ? {
-                    // goalId omitted on edit – backend ignores it
                     title: editingTask.title,
                     description: editingTask.description ?? '',
                     estimatedHours: editingTask.estimatedHours ?? '',
                     priority: editingTask.priority,
-                    dueDate: editingTask.dueDate, // already ISO string
+                    dueDate: editingTask.dueDate,
                   }
                 : {}}
               onSubmit={editingTask ? handleUpdate : handleCreate}
@@ -178,6 +188,6 @@ export default function TasksPage() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   )
 }

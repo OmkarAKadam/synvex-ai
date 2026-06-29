@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import { getCurrentUser, updateCurrentUser, deleteCurrentUser } from '../../services/userService'
 import ProfileForm from '../../components/profile/ProfileForm'
+import DashboardLayout from '../../components/layout/DashboardLayout'
 
 export default function ProfilePage() {
   const { logout } = useAuth()
@@ -55,44 +56,71 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) return <div>Loading…</div>
-  if (error) return <div style={{ color: 'red' }}>Error: {error}</div>
-  if (!profile) return <div>No profile data</div>
+  if (loading) {
+    return (
+      <DashboardLayout title="Profile">
+        <div className="text-text-secondary font-medium animate-pulse">Loading profile…</div>
+      </DashboardLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout title="Profile">
+        <div className="border border-error/20 bg-error/5 text-error px-4 py-3 rounded-lg text-sm font-medium">
+          Error: {error}
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <DashboardLayout title="Profile">
+        <div className="text-text-secondary font-medium">No profile data found</div>
+      </DashboardLayout>
+    )
+  }
 
   return (
-    <div>
-      <h1>Profile</h1>
+    <DashboardLayout title="Profile">
+      <div className="max-w-xl space-y-6">
+        {/* Profile Card */}
+        <div className="border border-border bg-surface rounded-xl p-6 shadow-sm">
+          <h2 className="text-sm font-semibold text-text mb-4 uppercase tracking-wider text-text-secondary">
+            Personal Information
+          </h2>
+          <ProfileForm
+            defaultValues={{
+              name: profile.name,
+              email: profile.email,
+              occupation: profile.occupation ?? '',
+              availableHours: profile.availableHours ?? '',
+              workStyle: profile.workStyle ?? '',
+            }}
+            onSubmit={handleSave}
+            onCancel={() => {}}
+            submitting={saving}
+          />
+        </div>
 
-      <ProfileForm
-        defaultValues={{
-          name: profile.name,
-          email: profile.email,
-          occupation: profile.occupation ?? '',
-          availableHours: profile.availableHours ?? '',
-          workStyle: profile.workStyle ?? '',
-        }}
-        onSubmit={handleSave}
-        onCancel={() => {}}
-        submitting={saving}
-      />
-
-      <hr style={{ margin: '2rem 0' }} />
-
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          style={{
-            padding: '0.5rem 1rem',
-            background: '#c00',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '3px',
-          }}
-        >
-          {deleting ? 'Deleting…' : 'Delete Account'}
-        </button>
+        {/* Danger Zone */}
+        <div className="border border-error/20 bg-error-50/20 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-bold text-error">Danger Zone</h3>
+            <p className="text-xs text-text-muted mt-1 max-w-sm">
+              Permanently delete your account and all associated data. This action is irreversible.
+            </p>
+          </div>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="px-4 py-2 rounded-lg bg-error hover:bg-error/95 disabled:opacity-50 text-error-foreground font-semibold text-sm transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-error/20 self-start sm:self-center"
+          >
+            {deleting ? 'Deleting…' : 'Delete Account'}
+          </button>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

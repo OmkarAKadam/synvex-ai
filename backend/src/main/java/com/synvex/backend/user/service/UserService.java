@@ -6,6 +6,7 @@ import com.synvex.backend.user.dto.UserDTO;
 import com.synvex.backend.user.dto.UserProfileResponseDTO;
 import com.synvex.backend.user.dto.UserProfileUpdateDTO;
 import com.synvex.backend.user.entity.User;
+import com.synvex.backend.user.entity.WorkStyle;
 import com.synvex.backend.user.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,9 +38,7 @@ public class UserService {
                 .name(userDTO.getName())
                 .email(userDTO.getEmail())
                 .password(passwordEncoder.encode(userDTO.getPassword()))
-                .occupation(userDTO.getOccupation())
-                .availableHours(userDTO.getAvailableHours())
-                .workStyle(userDTO.getWorkStyle())
+                .workStyle(WorkStyle.FLEXIBLE)
                 .build();
         return userRepository.save(user);
     }

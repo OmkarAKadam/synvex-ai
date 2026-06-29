@@ -1,74 +1,67 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { resetPasswordSchema } from '../../utils/validators';
-import { resetPassword } from '../../services/authService';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { z } from 'zod';
+import { useState } from 'react';
+import { changePassword } from '../../services/authService';
+import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import PasswordInput from '../../components/auth/PasswordInput';
 import AuthButton from '../../components/auth/AuthButton';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ResetPasswordPage() {
-  const [searchParams] = useSearchParams();
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+});
+
+export default function ChangePasswordPage() {
   const navigate = useNavigate();
   const [authError, setAuthError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-
-  const token = searchParams.get('token');
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    setValue,
   } = useForm({
-    resolver: zodResolver(resetPasswordSchema),
-    defaultValues: { token: token || '' },
+    resolver: zodResolver(changePasswordSchema),
     shouldFocusError: true,
   });
-
-  useEffect(() => {
-    if (token) {
-      setValue('token', token, { shouldValidate: false });
-    }
-  }, [token, setValue]);
 
   const onSubmit = async (data) => {
     setAuthError('');
     setSuccessMessage('');
     try {
-      await resetPassword(data.token, data.newPassword, data.confirmPassword);
-      setSuccessMessage('Password has been reset successfully. Redirecting to login...');
-      setTimeout(() => navigate('/login'), 1500);
+      await changePassword(data.currentPassword, data.newPassword);
+      setSuccessMessage('Password changed successfully.');
+      setTimeout(() => navigate('/profile'), 1500);
     } catch (err) {
-      const message = err?.response?.data?.message || err?.friendlyMessage || 'Password reset failed';
+      const message = err?.response?.data?.message || err?.friendlyMessage || 'Failed to change password';
       setAuthError(message);
     }
   };
 
   const isLoading = isSubmitting;
 
-  if (!token) {
-    return (
-      <AuthLayout>
-        <div className="w-full">
-          <div className="text-center">
-            <div className="p-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs font-medium">
-              Invalid or missing reset token.
-            </div>
-          </div>
-        </div>
-      </AuthLayout>
-    );
-  }
-
   return (
     <AuthLayout>
       <div className="w-full">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => navigate('/profile')}
+            className="p-1.5 rounded-lg border border-border bg-surface-elevated/40 hover:bg-surface-elevated text-text-secondary hover:text-text transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+            aria-label="Back to profile"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          </button>
+        </div>
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-text mb-1">Reset Password</h1>
-          <p className="text-sm text-text-muted">Enter your new password</p>
+          <h1 className="text-2xl font-bold text-text mb-1">Change Password</h1>
+          <p className="text-sm text-text-muted">Update your account password</p>
         </div>
 
         <AnimatePresence mode="wait">
@@ -97,22 +90,31 @@ export default function ResetPasswordPage() {
         </AnimatePresence>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <input type="hidden" {...register('token')} />
           <div className="space-y-4">
+            <PasswordInput
+              {...register('currentPassword')}
+              label="Current Password"
+              type="password"
+              autoComplete="current-password"
+              error={errors.currentPassword?.message}
+              disabled={isLoading}
+              placeholder="Enter current password"
+              showStrength={false}
+            />
             <PasswordInput
               {...register('newPassword')}
               label="New Password"
               error={errors.newPassword?.message}
               disabled={isLoading}
-              placeholder="Enter your new password"
+              placeholder="Enter new password"
             />
             <PasswordInput
               {...register('confirmPassword')}
-              label="Confirm Password"
+              label="Confirm New Password"
               type="password"
               error={errors.confirmPassword?.message}
               disabled={isLoading}
-              placeholder="Confirm your new password"
+              placeholder="Confirm new password"
               showStrength={false}
             />
             <AuthButton
@@ -120,7 +122,7 @@ export default function ResetPasswordPage() {
               loading={isLoading}
               className="mt-2"
             >
-              Reset Password
+              Update Password
             </AuthButton>
           </div>
         </form>

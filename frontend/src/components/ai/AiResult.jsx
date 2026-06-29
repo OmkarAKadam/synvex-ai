@@ -1,9 +1,9 @@
 export default function AiResult({ title, content }) {
   if (!content) return null
   return (
-    <div style={{ marginTop: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px', background: '#fafafa' }}>
-      <h3 style={{ marginTop: 0 }}>{title}</h3>
-      <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{content}</pre>
+    <div className="border border-border bg-surface rounded-xl p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">{title}</h3>
+      <pre className="whitespace-pre-wrap font-[inherit] text-sm text-text leading-relaxed">{content}</pre>
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
-const workStyleValues = ['FLEXIBLE', 'STRUCTURED', 'REMOTE']
+const workStyleValues = ['POMODORO', 'DEEP_WORK', 'SPRINT', 'FLEXIBLE'] 
 
 const schema = z.object({
   goal: z.string().min(1, 'Goal is required'),

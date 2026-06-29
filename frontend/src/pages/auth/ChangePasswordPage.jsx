@@ -4,10 +4,12 @@ import { z } from 'zod';
 import { useState } from 'react';
 import { changePassword } from '../../services/authService';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import PasswordInput from '../../components/ui/PasswordInput';
+import Button from '../../components/ui/Button';
+import Alert from '../../components/ui/Alert';
 import AuthLayout from '../../components/auth/AuthLayout';
-import PasswordInput from '../../components/auth/PasswordInput';
-import AuthButton from '../../components/auth/AuthButton';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
@@ -56,7 +58,7 @@ export default function ChangePasswordPage() {
             className="p-1.5 rounded-lg border border-border bg-surface-elevated/40 hover:bg-surface-elevated text-text-secondary hover:text-text transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
             aria-label="Back to profile"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+            <ArrowLeft size={16} />
           </button>
         </div>
         <div className="text-center mb-6">
@@ -66,26 +68,10 @@ export default function ChangePasswordPage() {
 
         <AnimatePresence mode="wait">
           {authError && (
-            <motion.div
-              key="error"
-              className="mb-4 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {authError}
-            </motion.div>
+            <Alert key="error" variant="error">{authError}</Alert>
           )}
           {successMessage && (
-            <motion.div
-              key="success"
-              className="mb-4 p-3 rounded-lg bg-success/10 border border-success/20 text-success text-xs font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {successMessage}
-            </motion.div>
+            <Alert key="success" variant="success">{successMessage}</Alert>
           )}
         </AnimatePresence>
 
@@ -107,6 +93,7 @@ export default function ChangePasswordPage() {
               error={errors.newPassword?.message}
               disabled={isLoading}
               placeholder="Enter new password"
+              showStrength={true}
             />
             <PasswordInput
               {...register('confirmPassword')}
@@ -117,13 +104,14 @@ export default function ChangePasswordPage() {
               placeholder="Confirm new password"
               showStrength={false}
             />
-            <AuthButton
+            <Button
               type="submit"
               loading={isLoading}
               className="mt-2"
+              fullWidth
             >
               Update Password
-            </AuthButton>
+            </Button>
           </div>
         </form>
       </div>

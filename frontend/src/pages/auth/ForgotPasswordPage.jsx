@@ -3,10 +3,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { forgotPasswordSchema } from '../../utils/validators';
 import { forgotPassword } from '../../services/authService';
 import { useState } from 'react';
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
+import Alert from '../../components/ui/Alert';
 import AuthLayout from '../../components/auth/AuthLayout';
-import AuthInput from '../../components/auth/AuthInput';
-import AuthButton from '../../components/auth/AuthButton';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function ForgotPasswordPage() {
@@ -40,15 +41,6 @@ export default function ForgotPasswordPage() {
   return (
     <AuthLayout>
       <div className="w-full">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => navigate('/login')}
-            className="p-1.5 rounded-lg border border-border bg-surface-elevated/40 hover:bg-surface-elevated text-text-secondary hover:text-text transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
-            aria-label="Back to login"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-          </button>
-        </div>
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-text mb-1">Forgot Password</h1>
           <p className="text-sm text-text-muted">Enter your email to receive a reset link</p>
@@ -56,54 +48,47 @@ export default function ForgotPasswordPage() {
 
         <AnimatePresence mode="wait">
           {authError && (
-            <motion.div
-              key="error"
-              className="mb-4 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {authError}
-            </motion.div>
+            <Alert key="error" variant="error">{authError}</Alert>
           )}
           {successMessage && (
-            <motion.div
-              key="success"
-              className="mb-4 p-3 rounded-lg bg-success/10 border border-success/20 text-success text-xs font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {successMessage}
-            </motion.div>
+            <Alert key="success" variant="success">{successMessage}</Alert>
           )}
         </AnimatePresence>
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="space-y-4">
-            <AuthInput
-              {...register('email')}
-              label="Email"
-              type="email"
-              autoComplete="email"
-              error={errors.email?.message}
-              disabled={isLoading}
-              placeholder="Enter your email"
-            />
-            <AuthButton
-              type="submit"
-              loading={isLoading}
-              className="mt-2"
-            >
-              Send Reset Link
-            </AuthButton>
+        {successMessage ? (
+          <div className="text-center mt-8">
+            <Link to="/login" className="text-sm font-medium text-primary hover:underline">Back to Sign In</Link>
           </div>
-        </form>
+        ) : (
+          <>
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+              <div className="space-y-4">
+                <Input
+                  {...register('email')}
+                  label="Email"
+                  type="email"
+                  autoComplete="email"
+                  error={errors.email?.message}
+                  disabled={isLoading}
+                  placeholder="Enter your email"
+                />
+                <Button
+                  type="submit"
+                  loading={isLoading}
+                  className="mt-2"
+                  fullWidth
+                >
+                  Send Reset Link
+                </Button>
+              </div>
+            </form>
 
-        <div className="mt-6 text-center text-sm text-text-muted">
-          Remember your password?{' '}
-          <Link to="/login" className="text-primary hover:underline font-medium">Sign In</Link>
-        </div>
+            <div className="mt-8 text-center text-sm text-text-muted">
+              Remember your password?{' '}
+              <Link to="/login" className="text-primary hover:underline font-medium">Sign In</Link>
+            </div>
+          </>
+        )}
       </div>
     </AuthLayout>
   );

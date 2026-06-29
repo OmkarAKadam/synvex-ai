@@ -7,6 +7,8 @@ import {
   updateTaskStatus,
 } from '../../services/taskService'
 import { getAllGoals } from '../../services/goalService'
+import Modal from '../../components/ui/Modal'
+import Card from '../../components/ui/Card'
 import TaskForm from '../../components/tasks/TaskForm'
 import TaskCard from '../../components/tasks/TaskCard'
 import DashboardLayout from '../../components/layout/DashboardLayout'
@@ -162,13 +164,12 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Modal wrapper */}
-      {showForm && (
-        <div className="fixed inset-0 bg-overlay/40 flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-surface border border-border p-6 rounded-xl shadow-md w-full max-w-lg max-h-[90vh] overflow-y-auto relative animate-scale-in">
-            <h2 className="text-lg font-bold text-text mb-4 border-b border-border pb-3">
-              {editingTask ? 'Edit Task' : 'Create Task'}
-            </h2>
+      <Modal isOpen={showForm} onClose={closeForm} ariaLabel={editingTask ? 'Edit Task' : 'Create Task'}>
+        <Card>
+          <Card.Header>
+            <Card.Title>{editingTask ? 'Edit Task' : 'Create Task'}</Card.Title>
+          </Card.Header>
+          <Card.Body>
             <TaskForm
               defaultValues={editingTask
                 ? {
@@ -185,9 +186,9 @@ export default function TasksPage() {
               goals={goals}
               isEditing={!!editingTask}
             />
-          </div>
-        </div>
-      )}
+          </Card.Body>
+        </Card>
+      </Modal>
     </DashboardLayout>
   )
 }

@@ -7,8 +7,8 @@ export const shadows = {
   xl: '0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.08)',
   '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.12)',
   inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-  focus: '0 0 0 3px rgb(99 102 241 / 0.4)',
-  focusDark: '0 0 0 3px rgb(129 140 248 / 0.4)',
+  focus: '0 0 0 2px rgb(99 102 241 / 0.4)',
+  focusDark: '0 0 0 2px rgb(129 140 248 / 0.4)',
 } as const;
 
 export const elevation = {

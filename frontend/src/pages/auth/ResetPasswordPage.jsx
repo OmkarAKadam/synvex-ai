@@ -2,12 +2,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { resetPasswordSchema } from '../../utils/validators';
 import { resetPassword } from '../../services/authService';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import PasswordInput from '../../components/ui/PasswordInput';
+import Button from '../../components/ui/Button';
 import AuthLayout from '../../components/auth/AuthLayout';
-import PasswordInput from '../../components/auth/PasswordInput';
-import AuthButton from '../../components/auth/AuthButton';
-import { motion, AnimatePresence } from 'framer-motion';
+import Alert from '../../components/ui/Alert';
+import { AnimatePresence } from 'framer-motion';
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -53,10 +54,9 @@ export default function ResetPasswordPage() {
     return (
       <AuthLayout>
         <div className="w-full">
-          <div className="text-center">
-            <div className="p-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs font-medium">
-              Invalid or missing reset token.
-            </div>
+          <Alert variant="error">Invalid or missing reset token. Please request a new password reset link.</Alert>
+          <div className="text-center mt-8">
+            <Link to="/login" className="text-sm font-medium text-primary hover:underline">Back to Sign In</Link>
           </div>
         </div>
       </AuthLayout>
@@ -73,26 +73,10 @@ export default function ResetPasswordPage() {
 
         <AnimatePresence mode="wait">
           {authError && (
-            <motion.div
-              key="error"
-              className="mb-4 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {authError}
-            </motion.div>
+            <Alert key="error" variant="error">{authError}</Alert>
           )}
           {successMessage && (
-            <motion.div
-              key="success"
-              className="mb-4 p-3 rounded-lg bg-success/10 border border-success/20 text-success text-xs font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {successMessage}
-            </motion.div>
+            <Alert key="success" variant="success">{successMessage}</Alert>
           )}
         </AnimatePresence>
 
@@ -105,6 +89,7 @@ export default function ResetPasswordPage() {
               error={errors.newPassword?.message}
               disabled={isLoading}
               placeholder="Enter your new password"
+              showStrength={true}
             />
             <PasswordInput
               {...register('confirmPassword')}
@@ -115,15 +100,21 @@ export default function ResetPasswordPage() {
               placeholder="Confirm your new password"
               showStrength={false}
             />
-            <AuthButton
+            <Button
               type="submit"
               loading={isLoading}
               className="mt-2"
+              fullWidth
             >
               Reset Password
-            </AuthButton>
+            </Button>
           </div>
         </form>
+
+        <div className="mt-8 text-center text-sm text-text-muted">
+          Remember your password?{' '}
+          <Link to="/login" className="text-primary hover:underline font-medium">Sign In</Link>
+        </div>
       </div>
     </AuthLayout>
   );

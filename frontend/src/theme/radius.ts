@@ -8,11 +8,11 @@ export const radius = {
 } as const;
 
 export const componentRadius = {
-  button: radius.lg,
-  input: radius.lg,
+  button: "0.75rem",
+  input: "0.75rem",
   card: radius.lg,
-  table: radius.lg,
-  dropdown: radius.lg,
+  table: radius.md,
+  dropdown: radius.md,
 
   dialog: radius.xl,
   modal: radius.xl,

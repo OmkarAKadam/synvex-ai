@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import {
   Brain,
@@ -16,8 +16,22 @@ import {
 export default function DashboardLayout({ children, title }) {
   const { logout, user } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const closeButtonRef = useRef(null)
+  const hamburgerRef = useRef(null)
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+    closeButtonRef.current?.focus()
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false)
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+      hamburgerRef.current?.focus()
+    }
+  }, [mobileMenuOpen])
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -43,6 +57,7 @@ export default function DashboardLayout({ children, title }) {
           <span className="font-bold text-lg tracking-tight">Synvex AI</span>
         </div>
         <button
+          ref={hamburgerRef}
           onClick={() => setMobileMenuOpen(true)}
           className="p-1.5 rounded-md hover:bg-surface-elevated text-text-secondary hover:text-text transition-colors"
           aria-label="Open sidebar"
@@ -51,74 +66,80 @@ export default function DashboardLayout({ children, title }) {
         </button>
       </header>
 
-      {/* Mobile Drawer (Sidebar backdrop) */}
+      {/* Mobile Drawer backdrop */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-overlay/50 md:hidden z-50 transition-opacity duration-200"
+          className="fixed inset-0 bg-overlay/50 md:hidden z-50"
           onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
         />
       )}
 
-      {/* Sidebar container - Fixed on desktop, Drawer on mobile */}
+      {/* Sidebar - Fixed on desktop, Drawer on mobile */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-surface border-r border-border flex flex-col justify-between transition-transform duration-200 ease-out md:translate-x-0 md:static md:h-screen
+        role={mobileMenuOpen ? 'dialog' : undefined}
+        aria-modal={mobileMenuOpen ? 'true' : undefined}
+        aria-label="Navigation sidebar"
+        className={`fixed top-0 bottom-0 left-0 z-50 w-60 bg-surface border-r border-border flex flex-col transition-transform duration-200 ease-out md:translate-x-0 md:static md:h-screen
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div>
-          {/* Logo Section */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Brain size={16} className="text-primary" />
-              </div>
-              <span className="font-bold text-lg tracking-tight">Synvex AI</span>
+        {/* Logo Section */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Brain size={16} className="text-primary" />
             </div>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="md:hidden p-1.5 rounded-md hover:bg-surface-elevated text-text-secondary hover:text-text transition-colors"
-              aria-label="Close sidebar"
-            >
-              <X size={18} />
-            </button>
+            <span className="font-bold text-lg tracking-tight">Synvex AI</span>
           </div>
-
-          {/* Navigation Links */}
-          <nav className="px-3 py-4 space-y-1">
-            {navigation.map((item) => {
-              const Icon = item.icon
-              const isActive = location.pathname.startsWith(item.href)
-              return (
-                <NavLink
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors
-                    ${isActive
-                      ? 'bg-surface-elevated text-text border border-border/50 shadow-xs'
-                      : 'text-text-secondary hover:text-text hover:bg-surface-elevated/50'
-                    }`}
-                >
-                  <Icon size={18} className={isActive ? 'text-primary' : 'text-text-muted group-hover:text-text-secondary'} />
-                  {item.name}
-                </NavLink>
-              )
-            })}
-          </nav>
+          <button
+            ref={closeButtonRef}
+            onClick={() => setMobileMenuOpen(false)}
+            className="md:hidden p-1.5 rounded-md hover:bg-surface-elevated text-text-secondary hover:text-text transition-colors"
+            aria-label="Close sidebar"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        {/* User Profile & Logout Area */}
-        <div className="p-4 border-t border-border bg-surface-elevated/30">
+        {/* Navigation Links */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1" aria-label="Main navigation">
+          {navigation.map((item) => {
+            const Icon = item.icon
+            return (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors
+                  ${isActive
+                    ? 'bg-surface-elevated text-text border border-border/50'
+                    : 'text-text-secondary hover:text-text hover:bg-surface-elevated/50'
+                  }`}
+              >
+                {({ isActive }) => (
+                  <>
+                    <Icon size={18} className={`shrink-0 ${isActive ? 'text-primary' : 'text-text-muted'}`} />
+                    <span>{item.name}</span>
+                  </>
+                )}
+              </NavLink>
+            )
+          })}
+        </nav>
+
+        {/* User Profile & Logout */}
+        <div className="border-t border-border">
           {user && (
-            <div className="px-3 py-2 mb-3">
+            <div className="px-6 py-4">
               <p className="text-sm font-medium truncate text-text">{user.name}</p>
               <p className="text-xs text-text-muted truncate mt-0.5">{user.email}</p>
             </div>
           )}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-error hover:text-error hover:bg-error-50 rounded-lg transition-colors"
+            className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-error hover:text-error hover:bg-error-50 transition-colors"
           >
-            <LogOut size={18} />
+            <LogOut size={18} className="shrink-0" />
             Logout
           </button>
         </div>
@@ -126,7 +147,7 @@ export default function DashboardLayout({ children, title }) {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 md:h-screen md:overflow-y-auto">
-        <div className="flex-1 px-6 py-8 max-w-6xl w-full mx-auto space-y-6">
+        <div className="flex-1 px-6 py-6 max-w-[90rem] w-full mx-auto space-y-6">
           {/* Optional Page Header */}
           {title && (
             <div className="border-b border-border pb-4 mb-6">

@@ -4,11 +4,12 @@ import { loginSchema } from '../../utils/validators';
 import useAuth from '../../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
+import Input from '../../components/ui/Input';
+import PasswordInput from '../../components/ui/PasswordInput';
+import Button from '../../components/ui/Button';
+import Alert from '../../components/ui/Alert';
 import AuthLayout from '../../components/auth/AuthLayout';
-import AuthInput from '../../components/auth/AuthInput';
-import PasswordInput from '../../components/auth/PasswordInput';
-import AuthButton from '../../components/auth/AuthButton';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 export default function LoginPage() {
   const { login, loading: authLoading } = useAuth();
@@ -47,21 +48,13 @@ export default function LoginPage() {
  
         <AnimatePresence mode="wait">
           {authError && (
-            <motion.div
-              key="error"
-              className="mb-4 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {authError}
-            </motion.div>
+            <Alert key="error" variant="error">{authError}</Alert>
           )}
         </AnimatePresence>
  
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="space-y-4">
-            <AuthInput
+            <Input
               {...register('email')}
               label="Email"
               type="email"
@@ -78,23 +71,17 @@ export default function LoginPage() {
               placeholder="Enter your password"
               showStrength={false}
             />
-            <div className="flex items-center justify-between mt-1">
-              <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-border bg-bg text-primary focus:ring-primary/20"
-                />
-                Remember me
-              </label>
+            <div className="text-right mt-1">
               <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">Forgot password?</Link>
             </div>
-            <AuthButton
+            <Button
               type="submit"
               loading={isLoading}
               className="mt-2"
+              fullWidth
             >
               Sign In
-            </AuthButton>
+            </Button>
           </div>
         </form>
       </div>

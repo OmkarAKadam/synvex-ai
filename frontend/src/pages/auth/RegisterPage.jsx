@@ -4,11 +4,12 @@ import { registerSchema } from '../../utils/validators';
 import { register } from '../../services/authService';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import Input from '../../components/ui/Input';
+import PasswordInput from '../../components/ui/PasswordInput';
+import Button from '../../components/ui/Button';
+import Alert from '../../components/ui/Alert';
 import AuthLayout from '../../components/auth/AuthLayout';
-import AuthInput from '../../components/auth/AuthInput';
-import PasswordInput from '../../components/auth/PasswordInput';
-import AuthButton from '../../components/auth/AuthButton';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -45,21 +46,13 @@ export default function RegisterPage() {
 
         <AnimatePresence mode="wait">
           {authError && (
-            <motion.div
-              key="error"
-              className="mb-4 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {authError}
-            </motion.div>
+            <Alert key="error" variant="error">{authError}</Alert>
           )}
         </AnimatePresence>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="space-y-4">
-            <AuthInput
+            <Input
               {...registerField('name')}
               label="Full Name"
               type="text"
@@ -68,7 +61,7 @@ export default function RegisterPage() {
               disabled={isLoading}
               placeholder="Enter your name"
             />
-            <AuthInput
+            <Input
               {...registerField('email')}
               label="Email"
               type="email"
@@ -83,6 +76,7 @@ export default function RegisterPage() {
               error={errors.password?.message}
               disabled={isLoading}
               placeholder="Create a password"
+              showStrength={true}
             />
             <PasswordInput
               {...registerField('confirmPassword')}
@@ -93,13 +87,14 @@ export default function RegisterPage() {
               placeholder="Confirm your password"
               showStrength={false}
             />
-            <AuthButton
+            <Button
               type="submit"
               loading={isLoading}
               className="mt-2"
+              fullWidth
             >
               Create Account
-            </AuthButton>
+            </Button>
           </div>
         </form>
       </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
+import Alert from '../../components/ui/Alert'
 import DeadlineBar from './DeadlineBar'
 
 const statusVariant = {
@@ -57,11 +58,19 @@ function calcDeadline(goal) {
 export default function GoalCard({ goal, onEdit, onDelete, onProgressChange }) {
   const [progress, setProgress] = useState(goal.progressPercentage)
   const [savingProgress, setSavingProgress] = useState(false)
+  const [progressSuccess, setProgressSuccess] = useState(false)
+  const [progressError, setProgressError] = useState(null)
 
   async function handleProgressSave() {
     setSavingProgress(true)
+    setProgressError(null)
+    setProgressSuccess(false)
     try {
       await onProgressChange(goal.id, progress)
+      setProgressSuccess(true)
+      setTimeout(() => setProgressSuccess(false), 1000)
+    } catch (err) {
+      setProgressError(err.message || 'Failed to save progress')
     } finally {
       setSavingProgress(false)
     }
@@ -124,9 +133,12 @@ export default function GoalCard({ goal, onEdit, onDelete, onProgressChange }) {
             onClick={handleProgressSave}
             disabled={savingProgress || progress === goal.progressPercentage}
           >
-            {savingProgress ? 'Saving…' : 'Update'}
+            {savingProgress ? 'Saving…' : progressSuccess ? '✓ Updated' : 'Update'}
           </Button>
         </div>
+        {progressError && (
+          <p className="text-xs text-error font-medium">{progressError}</p>
+        )}
       </div>
 
       {/* Deadline Timeline */}

@@ -42,3 +42,23 @@ export const changePasswordSchema = z
     message: 'Passwords do not match',
     path: ['confirmPassword'],
   })
+
+export const goalSchema = z.object({
+  title: z
+    .string()
+    .min(1, { message: 'Title is required' })
+    .max(200, { message: 'Title must be at most 200 characters' }),
+
+  description: z
+    .string()
+    .min(1, { message: 'Description is required' })
+    .max(2000, { message: 'Description must be at most 2000 characters' }),
+
+  deadline: z
+    .string()
+    .min(1, { message: 'Deadline is required' }),
+
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH'], {
+    errorMap: () => ({ message: 'Priority is required' }),
+  }),
+})

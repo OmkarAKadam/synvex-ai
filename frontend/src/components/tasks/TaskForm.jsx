@@ -1,19 +1,18 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import Input from '../ui/Input'
+import Button from '../ui/Button'
 
-// ---------- Zod schema – mirrors TaskDTO ----------
 const priorityValues = ['LOW', 'MEDIUM', 'HIGH']
 
 const taskSchema = z.object({
-  // goalId is only required on CREATE; on EDIT the backend ignores it.
-  // We coerce the incoming string from <select> to a number.
   goalId: z.coerce.number({ required_error: 'Goal is required' }).min(1, 'Goal is required'),
   title: z.string().min(1, 'Title is required').max(200, 'Title must be ≤ 200 characters'),
   description: z.string().max(1000, 'Description must be ≤ 1000 characters').optional().or(z.literal('')),
   estimatedHours: z.coerce.number().int().min(1, 'Estimated hours must be at least 1').optional().nullable(),
   priority: z.enum(priorityValues, { required_error: 'Priority is required' }),
-  dueDate: z.string().min(1, 'Due date is required'),          // ISO string from <input type="date">
+  dueDate: z.string().min(1, 'Due date is required'),
 })
 
 export default function TaskForm({
@@ -21,12 +20,13 @@ export default function TaskForm({
   onSubmit,
   onCancel,
   submitting,
-  goals = [],               // supplied by TasksPage – no internal fetch
-  isEditing = false,        // when true we hide/disable the goal selector
+  goals = [],
+  isEditing = false,
 }) {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(taskSchema),
@@ -34,96 +34,133 @@ export default function TaskForm({
     mode: 'onChange',
   })
 
-  // When editing we don't want the backend‑wise don't need goalId – keep the field out of the payload.
-  // The easiest way is to omit it from the submitted values.
+  const titleValue = watch('title') || ''
+  const descriptionValue = watch('description') || ''
+
   const onValidSubmit = (data) => {
-    const payload = isEditing ? { ...data } : { ...data }
-    if (isEditing) delete payload.goalId          // backend updateTask does not use goalId
+    const payload = { ...data }
+    if (isEditing) delete payload.goalId
     onSubmit(payload)
   }
 
   return (
-    <form onSubmit={handleSubmit(onValidSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxWidth: '480px' }}>
-      {/* Goal selector – only for CREATE */}
+    <form onSubmit={handleSubmit(onValidSubmit)} className="space-y-4">
       {!isEditing && (
         <div>
-          <label htmlFor="goalId" style={{ display: 'block', marginBottom: '0.2rem' }}>
+          <label htmlFor="goalId" className="block text-sm font-medium text-text-secondary mb-1.5">
             Goal *
           </label>
-          <select id="goalId" {...register('goalId')} style={{ width: '100%', padding: '0.4rem' }}>
+          <select
+            id="goalId"
+            disabled={submitting}
+            {...register('goalId')}
+            className={`w-full px-3.5 py-2 rounded-input bg-bg border text-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 ${errors.goalId ? 'border-error focus:ring-error focus:border-error' : 'border-border'}`}
+            aria-invalid={errors.goalId ? 'true' : undefined}
+          >
             <option value="">— select goal —</option>
             {goals.map(g => (
               <option key={g.id} value={g.id}>{g.title}</option>
             ))}
           </select>
-          {errors.goalId && <span style={{ color: 'red', fontSize: '0.85rem' }}>{errors.goalId.message}</span>}
+          {errors.goalId && (
+            <p className="text-xs text-error font-medium mt-1.5" role="alert">{errors.goalId.message}</p>
+          )}
         </div>
       )}
 
-      <div>
-        <label htmlFor="title" style={{ display: 'block', marginBottom: '0.2rem' }}>
-          Title *
-        </label>
-        <input id="title" {...register('title')} style={{ width: '100%', padding: '0.4rem' }} />
-        {errors.title && <span style={{ color: 'red', fontSize: '0.85rem' }}>{errors.title.message}</span>}
-      </div>
+      <Input
+        label="Title"
+        required
+        placeholder="Enter task title"
+        error={errors.title?.message}
+        disabled={submitting}
+        helperText={`${titleValue.length}/200`}
+        {...register('title')}
+      />
 
       <div>
-        <label htmlFor="description" style={{ display: 'block', marginBottom: '0.2rem' }}>
+        <label htmlFor="description" className="block text-sm font-medium text-text-secondary mb-1.5">
           Description
         </label>
         <textarea
           id="description"
           rows={3}
+          placeholder="Enter task description"
+          disabled={submitting}
           {...register('description')}
-          style={{ width: '100%', padding: '0.4rem' }}
+          className={`w-full px-3.5 py-2 rounded-input bg-bg border text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 resize-vertical ${errors.description ? 'border-error focus:ring-error focus:border-error' : 'border-border'}`}
+          aria-invalid={errors.description ? 'true' : undefined}
         />
-        {errors.description && <span style={{ color: 'red', fontSize: '0.85rem' }}>{errors.description.message}</span>}
+        <div className="flex items-center justify-between mt-1.5">
+          {errors.description ? (
+            <p className="text-xs text-error font-medium" role="alert">{errors.description.message}</p>
+          ) : (
+            <span />
+          )}
+          <p className={`text-xs ${errors.description ? 'text-error' : 'text-text-muted'}`}>
+            {descriptionValue.length}/1000
+          </p>
+        </div>
       </div>
 
-      <div>
-        <label htmlFor="estimatedHours" style={{ display: 'block', marginBottom: '0.2rem' }}>
-          Estimated Hours
-        </label>
-        <input
-          id="estimatedHours"
-          type="number"
-          min={1}
-          step={1}
-          {...register('estimatedHours', { valueAsNumber: true })}
-          style={{ width: '100%', padding: '0.4rem' }}
-        />
-        {errors.estimatedHours && <span style={{ color: 'red', fontSize: '0.85rem' }}>{errors.estimatedHours.message}</span>}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="dueDate" className="block text-sm font-medium text-text-secondary mb-1.5">
+            Due Date *
+          </label>
+          <input
+            id="dueDate"
+            type="date"
+            disabled={submitting}
+            {...register('dueDate')}
+            className={`w-full px-3.5 py-2 rounded-input bg-bg border text-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 ${errors.dueDate ? 'border-error focus:ring-error focus:border-error' : 'border-border'}`}
+            aria-invalid={errors.dueDate ? 'true' : undefined}
+          />
+          {errors.dueDate && (
+            <p className="text-xs text-error font-medium mt-1.5" role="alert">{errors.dueDate.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="priority" className="block text-sm font-medium text-text-secondary mb-1.5">
+            Priority *
+          </label>
+          <select
+            id="priority"
+            disabled={submitting}
+            {...register('priority')}
+            className={`w-full px-3.5 py-2 rounded-input bg-bg border text-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 ${errors.priority ? 'border-error focus:ring-error focus:border-error' : 'border-border'}`}
+            aria-invalid={errors.priority ? 'true' : undefined}
+          >
+            <option value="">— select —</option>
+            {priorityValues.map(p => (
+              <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
+            ))}
+          </select>
+          {errors.priority && (
+            <p className="text-xs text-error font-medium mt-1.5" role="alert">{errors.priority.message}</p>
+          )}
+        </div>
       </div>
 
-      <div>
-        <label htmlFor="priority" style={{ display: 'block', marginBottom: '0.2rem' }}>
-          Priority *
-        </label>
-        <select id="priority" {...register('priority')} style={{ width: '100%', padding: '0.4rem' }}>
-          <option value="">— select —</option>
-          {priorityValues.map(p => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
-        {errors.priority && <span style={{ color: 'red', fontSize: '0.85rem' }}>{errors.priority.message}</span>}
-      </div>
+      <Input
+        label="Estimated Hours"
+        type="number"
+        min={1}
+        step={1}
+        placeholder="Enter estimated hours"
+        error={errors.estimatedHours?.message}
+        disabled={submitting}
+        {...register('estimatedHours', { valueAsNumber: true })}
+      />
 
-      <div>
-        <label htmlFor="dueDate" style={{ display: 'block', marginBottom: '0.2rem' }}>
-          Due Date *
-        </label>
-        <input id="dueDate" type="date" {...register('dueDate')} style={{ width: '100%', padding: '0.4rem' }} />
-        {errors.dueDate && <span style={{ color: 'red', fontSize: '0.85rem' }}>{errors.dueDate.message}</span>}
-      </div>
-
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-        <button type="submit" disabled={submitting} style={{ padding: '0.5rem 1rem' }}>
-          {submitting ? 'Saving…' : 'Save'}
-        </button>
-        <button type="button" onClick={onCancel} style={{ padding: '0.5rem 1rem' }}>
+      <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-border/60 mt-6">
+        <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
           Cancel
-        </button>
+        </Button>
+        <Button type="submit" loading={submitting}>
+          Save
+        </Button>
       </div>
     </form>
   )

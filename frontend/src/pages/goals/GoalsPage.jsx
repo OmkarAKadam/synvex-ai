@@ -41,26 +41,35 @@ export default function GoalsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingGoal, setEditingGoal] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
+  const [formError, setFormError] = useState(null)
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortBy, setSortBy] = useState('deadline')
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const data = await getAllGoals()
-        if (!cancelled) setGoals(data)
-      } catch (err) {
-        if (!cancelled) setError(err.friendlyMessage || err.message || 'Failed to load goals')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
+  async function load() {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await getAllGoals()
+      setGoals(data)
+    } catch (err) {
+      setError(err.friendlyMessage || err.message || 'Failed to load goals')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     load()
-    return () => { cancelled = true }
   }, [])
+
+  function retryLoad() {
+    load()
+  }
 
   const stats = useMemo(() => {
     const total = goals.length
@@ -96,12 +105,13 @@ export default function GoalsPage() {
 
   async function handleCreate(values) {
     setSubmitting(true)
+    setFormError(null)
     try {
       const newGoal = await createGoal(values)
       setGoals(prev => [newGoal, ...prev])
       closeForm()
     } catch (err) {
-      setError(err.friendlyMessage || err.message || 'Create failed')
+      setFormError(err.friendlyMessage || err.message || 'Create failed')
     } finally {
       setSubmitting(false)
     }
@@ -109,55 +119,137 @@ export default function GoalsPage() {
 
   async function handleUpdate(values) {
     setSubmitting(true)
+    setFormError(null)
     try {
       const updated = await updateGoal(editingGoal.id, values)
       setGoals(prev => prev.map(g => g.id === editingGoal.id ? updated : g))
       closeForm()
     } catch (err) {
-      setError(err.friendlyMessage || err.message || 'Update failed')
+      setFormError(err.friendlyMessage || err.message || 'Update failed')
     } finally {
       setSubmitting(false)
     }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm('Delete this goal?')) return
+  function handleDelete(id) {
+    const goal = goals.find(g => g.id === id)
+    if (goal) {
+      setDeleteTarget(goal)
+      setDeleteError(null)
+    }
+  }
+
+  function closeDeleteModal() {
+    setDeleteTarget(null)
+    setDeleteError(null)
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    setDeleteError(null)
     try {
-      await deleteGoal(id)
-      setGoals(prev => prev.filter(g => g.id !== id))
+      await deleteGoal(deleteTarget.id)
+      setGoals(prev => prev.filter(g => g.id !== deleteTarget.id))
+      setDeleteTarget(null)
     } catch (err) {
-      setError(err.friendlyMessage || err.message || 'Delete failed')
+      setDeleteError(err.friendlyMessage || err.message || 'Delete failed')
+    } finally {
+      setDeleting(false)
     }
   }
 
   async function handleProgress(id, progressPercentage) {
-    try {
-      const updated = await updateGoalProgress(id, progressPercentage)
-      setGoals(prev => prev.map(g => g.id === id ? updated : g))
-    } catch (err) {
-      setError(err.friendlyMessage || err.message || 'Progress update failed')
-    }
+    const updated = await updateGoalProgress(id, progressPercentage)
+    setGoals(prev => prev.map(g => g.id === id ? updated : g))
   }
 
   function openCreate() {
     setEditingGoal(null)
     setShowForm(true)
+    setFormError(null)
   }
   function openEdit(goal) {
     setEditingGoal(goal)
     setShowForm(true)
+    setFormError(null)
   }
   function closeForm() {
     setShowForm(false)
     setEditingGoal(null)
+    setFormError(null)
   }
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="min-h-[60vh] flex items-center justify-center gap-2">
-          <Spinner size="md" />
-          <span className="text-text-secondary font-medium">Loading goals…</span>
+        <div className="animate-pulse space-y-6">
+          {/* Header skeleton */}
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+            <div className="space-y-2">
+              <div className="h-8 w-32 bg-border rounded" />
+              <div className="h-4 w-56 bg-border rounded" />
+            </div>
+            <div className="h-10 w-28 bg-border rounded-lg" />
+          </div>
+
+          {/* Summary cards skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-surface border border-border rounded-card shadow-sm p-6">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 w-20 bg-border rounded" />
+                    <div className="h-8 w-16 bg-border rounded" />
+                  </div>
+                  <div className="h-10 w-10 bg-border rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Search/filter bar skeleton */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            <div className="sm:w-64 h-10 bg-border rounded-lg" />
+            <div className="flex gap-1.5 flex-1">
+              <div className="h-10 w-24 bg-border rounded-lg" />
+              <div className="h-10 w-28 bg-border rounded-lg" />
+              <div className="h-10 w-20 bg-border rounded-lg" />
+              <div className="h-10 w-24 bg-border rounded-lg" />
+            </div>
+            <div className="h-10 w-32 bg-border rounded-lg shrink-0" />
+          </div>
+
+          {/* Goal cards skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-surface border border-border rounded-card shadow-sm p-6 space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="h-5 w-3/4 bg-border rounded" />
+                  <div className="h-2 w-2 bg-border rounded-full" />
+                </div>
+                <div className="flex gap-1.5">
+                  <div className="h-5 w-20 bg-border rounded-full" />
+                  <div className="h-5 w-16 bg-border rounded-full" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 w-full bg-border rounded" />
+                  <div className="h-4 w-2/3 bg-border rounded" />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="h-3 w-16 bg-border rounded" />
+                    <div className="h-3 w-8 bg-border rounded" />
+                  </div>
+                  <div className="h-2 w-full bg-border rounded-full" />
+                </div>
+                <div className="flex items-center gap-2 pt-3 border-t border-border/60">
+                  <div className="h-8 w-16 bg-border rounded-lg" />
+                  <div className="h-8 w-20 bg-border rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </DashboardLayout>
     )
@@ -166,9 +258,12 @@ export default function GoalsPage() {
   if (error) {
     return (
       <DashboardLayout>
-        <Alert variant="error" className="max-w-md mx-auto mt-8">
-          {error}
-        </Alert>
+        <div className="flex flex-col items-center gap-4 max-w-md mx-auto mt-8">
+          <Alert variant="error" className="w-full">
+            {error}
+          </Alert>
+          <Button onClick={retryLoad}>Retry</Button>
+        </div>
       </DashboardLayout>
     )
   }
@@ -259,7 +354,9 @@ export default function GoalsPage() {
       {/* Goal Grid or Empty State */}
       {hasNoGoals ? (
         <div className="text-center py-12 border border-border border-dashed bg-surface/50 rounded-xl">
-          <p className="text-sm text-text-secondary mb-4">No goals yet. Add one to get started.</p>
+          <Target size={40} className="mx-auto mb-4 text-text-muted" />
+          <p className="text-sm text-text-secondary mb-1">No goals yet</p>
+          <p className="text-xs text-text-muted mb-4">Create your first goal to start tracking progress.</p>
           <Button variant="secondary" onClick={openCreate}>
             <Plus size={14} />
             Create Goal
@@ -267,7 +364,9 @@ export default function GoalsPage() {
         </div>
       ) : hasNoMatches ? (
         <div className="text-center py-12">
-          <p className="text-sm text-text-muted">No goals match your filters.</p>
+          <Search size={32} className="mx-auto mb-3 text-text-muted" />
+          <p className="text-sm text-text-secondary mb-1">No goals found</p>
+          <p className="text-xs text-text-muted">Try clearing your filters or changing your search.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -289,6 +388,7 @@ export default function GoalsPage() {
             <Card.Title>{editingGoal ? 'Edit Goal' : 'Create Goal'}</Card.Title>
           </Card.Header>
           <Card.Body>
+            {formError && <Alert variant="error" className="mb-4">{formError}</Alert>}
             <GoalForm
               defaultValues={editingGoal ? {
                 title: editingGoal.title,
@@ -302,6 +402,26 @@ export default function GoalsPage() {
             />
           </Card.Body>
         </Card>
+      </Modal>
+
+      <Modal isOpen={!!deleteTarget} onClose={closeDeleteModal} ariaLabel="Delete goal">
+        <div className="p-6">
+          <h3 className="text-lg font-bold text-text">Delete Goal</h3>
+          <p className="text-sm text-text-secondary mt-2">
+            Are you sure you want to delete{' '}
+            <span className="font-semibold text-text">{deleteTarget?.title}</span>?
+            This action cannot be undone.
+          </p>
+          {deleteError && <Alert variant="error" className="mt-4">{deleteError}</Alert>}
+          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-border/60 mt-6">
+            <Button variant="secondary" onClick={closeDeleteModal} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="danger" loading={deleting} onClick={confirmDelete}>
+              Delete
+            </Button>
+          </div>
+        </div>
       </Modal>
     </DashboardLayout>
   )
